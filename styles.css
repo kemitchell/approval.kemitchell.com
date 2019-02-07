@@ -38,7 +38,10 @@ tr > th:last-child {
 }
 
 input, select, button {
-  box-sizing: border-box;
   padding: 0.5rem;
+}
+
+td input, td select, td button {
+  box-sizing: border-box;
   width: 100%;
 }
