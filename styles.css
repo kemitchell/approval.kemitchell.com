@@ -41,7 +41,7 @@ input, select, button {
   padding: 0.5rem;
 }
 
-td input, td select, td button {
+input, select, button {
   box-sizing: border-box;
   width: 100%;
 }
