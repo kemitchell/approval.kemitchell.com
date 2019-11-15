@@ -13,6 +13,8 @@ var mkdirp = require('mkdirp')
 var mustache = require('mustache')
 var os = require('os')
 var path = require('path')
+var pino = require('pino')
+var pinoHTTP = require('pino-http')
 var rimraf = require('rimraf')
 var runParallel = require('run-parallel')
 var runParallelLimit = require('run-parallel-limit')
@@ -25,12 +27,14 @@ var HOSTNAME = process.env.HOSTNAME || os.hostname()
 var PASSWORD = process.env.PASSWORD || 'approval'
 var USER = process.env.USER || 'approval'
 
+var logger = pino()
+
 process
   .on('SIGTERM', shutdown)
   .on('SIGQUIT', shutdown)
   .on('SIGINT', shutdown)
   .on('uncaughtException', function (error) {
-    console.error(error)
+    logger.error(error, 'uncaughtException')
     shutdown()
   })
 
@@ -38,7 +42,10 @@ var ID_BYTES = 16
 
 var ID_RE = new RegExp('^/([a-f0-9]{' + (ID_BYTES * 2) + '})$')
 
+var addLoggers = pinoHTTP({ logger })
+
 var server = http.createServer(function (request, response) {
+  addLoggers(request, response)
   var url = request.url
   if (url === '/') return index(request, response)
   if (url === '/styles.css') return serveFile(request, response)
@@ -81,8 +88,10 @@ function postIndex (request, response) {
         if (name === 'choices[]') choices.push(value)
       })
       .once('finish', function () {
+        request.log.info({ title, choices }, 'inputs')
         createID(function (error, id) {
           if (error) return internalError(request, response, error)
+          request.log.info({ id }, 'id')
           if (!title || choices.length === 0) {
             response.statusCode = 400
             return response.end()
@@ -165,6 +174,7 @@ function postVote (request, response, id) {
       if (name === 'choices[]') choices.push(value)
     })
     .once('finish', function () {
+      request.log.info({ responder, choices }, 'data')
       var date = dateString()
       var line = JSON.stringify([date, responder, choices])
       var responsesPath = joinResponsesPath(id)
@@ -175,7 +185,7 @@ function postVote (request, response, id) {
           response.end(html)
         })
         readVoteData(id, function (error, data) {
-          if (error) return console.error(error)
+          if (error) return logger.error(error, 'readVoteData')
           var title = data.title
           mail({
             subject: 'Response to "' + title + '"',
@@ -185,7 +195,7 @@ function postVote (request, response, id) {
               HOSTNAME + '/' + id
             ]
           }, function (error) {
-            if (error) console.error(error)
+            if (error) logger.error(error, 'mail')
           })
         })
       })
@@ -248,7 +258,7 @@ function notFound (request, response) {
 }
 
 function internalError (request, response, error) {
-  console.error(error)
+  request.log.error(error)
   response.statusCode = 500
   response.end()
 }
@@ -269,17 +279,17 @@ deleteOldVotes()
 
 function deleteOldVotes () {
   fs.readdir(DIRECTORY, function (error, entries) {
-    if (error) return console.error(error)
+    if (error) return logger.error(error, 'deleteOldVotes readdir')
     runParallelLimit(entries.map(function (id) {
       return function (done) {
         var directory = path.join(DIRECTORY, id)
         var votePath = joinVotePath(id)
         jsonfile.readFile(votePath, function (error, vote) {
-          if (error) return console.error(error)
+          if (error) return logger.error(error, 'deleteOldVotes readFile')
           if (!old(vote.date)) return
           rimraf(directory, function (error) {
-            console.log('Deleted ' + id)
-            if (error) console.error(error)
+            logger.info({ id }, 'deleteOldVotes deleted')
+            if (error) logger.error(error, 'deleteOldVotes rimraf')
           })
         })
       }
