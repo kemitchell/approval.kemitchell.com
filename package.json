@@ -6,7 +6,7 @@
   "dependencies": {
     "basic-auth": "^2.0.1",
     "busboy": "^0.3.1",
-    "commonmark": "^0.29.0",
+    "commonmark": "^0.29.1",
     "do-not-cache": "^1.0.1",
     "form-data": "^3.0.0",
     "jsonfile": "^5.0.0",
