@@ -9,7 +9,6 @@ var fs = require('fs')
 var http = require('http')
 var https = require('https')
 var jsonfile = require('jsonfile')
-var mkdirp = require('mkdirp')
 var mustache = require('mustache')
 var os = require('os')
 var path = require('path')
@@ -101,7 +100,7 @@ function postIndex (request, response) {
           var votePath = joinVotePath(id)
           runSeries([
             function (done) {
-              mkdirp(dataPath(id), done)
+              fs.mkdir(dataPath(id), { recursive: true },done)
             },
             function (done) {
               fs.writeFile(votePath, JSON.stringify(data), 'utf8', done)
