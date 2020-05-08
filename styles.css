@@ -4,6 +4,8 @@ body > footer {
   font-family: "Noto Sans", sans-serif;
   font-size: 12pt;
   line-height: 1.5625;
+  margin: 0 auto;
+  max-width: 40rem;
   padding: 1rem;
 }
 
