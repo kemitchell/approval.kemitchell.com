@@ -60,7 +60,7 @@ function index (request, response) {
   var auth = basicAuth(request)
   if (!auth || auth.name !== USER || auth.pass !== PASSWORD) {
     response.statusCode = 401
-    response.setHeader('WWW-Authenticate', 'Basic realm="Vote"')
+    response.setHeader('WWW-Authenticate', 'Basic realm="Approval"')
     return response.end()
   }
   if (method === 'GET') getIndex(request, response)
