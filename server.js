@@ -24,7 +24,7 @@ var simpleConcat = require('simple-concat')
 var DIRECTORY = process.env.DIRECTORY || 'approval-data'
 var HOSTNAME = process.env.HOSTNAME || os.hostname()
 var PASSWORD = process.env.PASSWORD || 'approval'
-var USER = process.env.USER || 'approval'
+var USERNAME = process.env.USERNAME || 'approval'
 
 var logger = pino()
 
@@ -58,7 +58,7 @@ function index (request, response) {
   doNotCache(response)
   var method = request.method
   var auth = basicAuth(request)
-  if (!auth || auth.name !== USER || auth.pass !== PASSWORD) {
+  if (!auth || auth.name !== USERNAME || auth.pass !== PASSWORD) {
     response.statusCode = 401
     response.setHeader('WWW-Authenticate', 'Basic realm="Approval"')
     return response.end()
