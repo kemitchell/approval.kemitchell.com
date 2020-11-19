@@ -1,32 +1,32 @@
-var Busboy = require('busboy')
-var FormData = require('form-data')
-var assert = require('assert')
-var basicAuth = require('basic-auth')
-var commonmark = require('commonmark')
-var crypto = require('crypto')
-var doNotCache = require('do-not-cache')
-var fs = require('fs')
-var http = require('http')
-var https = require('https')
-var jsonfile = require('jsonfile')
-var mustache = require('mustache')
-var os = require('os')
-var path = require('path')
-var pino = require('pino')
-var pinoHTTP = require('pino-http')
-var rimraf = require('rimraf')
-var runParallel = require('run-parallel')
-var runParallelLimit = require('run-parallel-limit')
-var runSeries = require('run-series')
-var schedule = require('node-schedule')
-var simpleConcat = require('simple-concat')
+const Busboy = require('busboy')
+const FormData = require('form-data')
+const assert = require('assert')
+const basicAuth = require('basic-auth')
+const commonmark = require('commonmark')
+const crypto = require('crypto')
+const doNotCache = require('do-not-cache')
+const fs = require('fs')
+const http = require('http')
+const https = require('https')
+const jsonfile = require('jsonfile')
+const mustache = require('mustache')
+const os = require('os')
+const path = require('path')
+const pino = require('pino')
+const pinoHTTP = require('pino-http')
+const rimraf = require('rimraf')
+const runParallel = require('run-parallel')
+const runParallelLimit = require('run-parallel-limit')
+const runSeries = require('run-series')
+const schedule = require('node-schedule')
+const simpleConcat = require('simple-concat')
 
-var DIRECTORY = process.env.DIRECTORY || 'approval-data'
-var HOSTNAME = process.env.HOSTNAME || os.hostname()
-var PASSWORD = process.env.PASSWORD || 'approval'
-var USERNAME = process.env.USERNAME || 'approval'
+const DIRECTORY = process.env.DIRECTORY || 'approval-data'
+const HOSTNAME = process.env.HOSTNAME || os.hostname()
+const PASSWORD = process.env.PASSWORD || 'approval'
+const USERNAME = process.env.USERNAME || 'approval'
 
-var logger = pino()
+const logger = pino()
 
 process
   .on('SIGTERM', shutdown)
@@ -37,27 +37,27 @@ process
     shutdown()
   })
 
-var ID_BYTES = 16
+const ID_BYTES = 16
 
-var ID_RE = new RegExp('^/([a-f0-9]{' + (ID_BYTES * 2) + '})$')
+const ID_RE = new RegExp('^/([a-f0-9]{' + (ID_BYTES * 2) + '})$')
 
-var addLoggers = pinoHTTP({ logger })
+const addLoggers = pinoHTTP({ logger })
 
-var server = http.createServer(function (request, response) {
+const server = http.createServer(function (request, response) {
   addLoggers(request, response)
-  var url = request.url
+  const url = request.url
   if (url === '/') return index(request, response)
   if (url === '/styles.css') return serveFile(request, response)
   if (url === '/client.js') return serveFile(request, response)
-  var match = ID_RE.exec(url)
+  const match = ID_RE.exec(url)
   if (match) vote(request, response, match[1])
   else notFound(request, response)
 })
 
 function index (request, response) {
   doNotCache(response)
-  var method = request.method
-  var auth = basicAuth(request)
+  const method = request.method
+  const auth = basicAuth(request)
   if (!auth || auth.name !== USERNAME || auth.pass !== PASSWORD) {
     response.statusCode = 401
     response.setHeader('WWW-Authenticate', 'Basic realm="Approval"')
@@ -77,8 +77,8 @@ function getIndex (request, response) {
 }
 
 function postIndex (request, response) {
-  var title
-  var choices = []
+  let title
+  const choices = []
   request.pipe(
     new Busboy({ headers: request.headers })
       .on('field', function (name, value) {
@@ -95,12 +95,12 @@ function postIndex (request, response) {
             response.statusCode = 400
             return response.end()
           }
-          var date = dateString()
-          var data = { date, title, choices }
-          var votePath = joinVotePath(id)
+          const date = dateString()
+          const data = { date, title, choices }
+          const votePath = joinVotePath(id)
           runSeries([
             function (done) {
-              fs.mkdir(dataPath(id), { recursive: true },done)
+              fs.mkdir(dataPath(id), { recursive: true }, done)
             },
             function (done) {
               fs.writeFile(votePath, JSON.stringify(data), 'utf8', done)
@@ -124,8 +124,8 @@ function createID (callback) {
 }
 
 function serveFile (request, response) {
-  var basename = path.basename(request.url)
-  var filePath = packagePath(basename)
+  const basename = path.basename(request.url)
+  const filePath = packagePath(basename)
   fs.createReadStream(filePath).pipe(response)
 }
 
@@ -135,7 +135,7 @@ function methodNotAllowed (request, response) {
 }
 
 function vote (request, response, id) {
-  var method = request.method
+  const method = request.method
   if (method === 'GET') getVote(request, response, id)
   else if (method === 'POST') postVote(request, response, id)
   else methodNotAllowed(request, response)
@@ -149,9 +149,9 @@ function getVote (request, response, id) {
       else return internalError(request, response, error)
     }
     data.markdownChoices = data.choices.map(function (choice) {
-      var reader = new commonmark.Parser()
-      var writer = new commonmark.HtmlRenderer()
-      var parsed = reader.parse(choice)
+      const reader = new commonmark.Parser()
+      const writer = new commonmark.HtmlRenderer()
+      const parsed = reader.parse(choice)
       return writer.render(parsed)
     })
     renderMustache('vote.html', data, function (error, html) {
@@ -164,8 +164,8 @@ function getVote (request, response, id) {
 
 function postVote (request, response, id) {
   doNotCache(response)
-  var responder
-  var choices = []
+  let responder
+  const choices = []
   request.pipe(new Busboy({ headers: request.headers })
     .on('field', function (name, value) {
       if (!value) return
@@ -174,9 +174,9 @@ function postVote (request, response, id) {
     })
     .once('finish', function () {
       request.log.info({ responder, choices }, 'data')
-      var date = dateString()
-      var line = JSON.stringify([date, responder, choices])
-      var responsesPath = joinResponsesPath(id)
+      const date = dateString()
+      const line = JSON.stringify([date, responder, choices])
+      const responsesPath = joinResponsesPath(id)
       fs.appendFile(responsesPath, line + '\n', function (error) {
         if (error) return internalError(request, response, error)
         renderMustache('voted.html', {}, function (error, html) {
@@ -185,7 +185,7 @@ function postVote (request, response, id) {
         })
         readVoteData(id, function (error, data) {
           if (error) return logger.error(error, 'readVoteData')
-          var title = data.title
+          const title = data.title
           mail({
             subject: 'Response to "' + title + '"',
             text: [
@@ -207,7 +207,7 @@ function readVoteData (id, callback) {
       jsonfile.readFile(joinVotePath(id), done)
     },
     responses: function (done) {
-      var responsesPath = joinResponsesPath(id)
+      const responsesPath = joinResponsesPath(id)
       fs.readFile(responsesPath, 'utf8', function (error, ndjson) {
         if (error) {
           if (error.code === 'ENOENT') ndjson = ''
@@ -216,8 +216,9 @@ function readVoteData (id, callback) {
         done(null, ndjson
           .split('\n')
           .map(function (line) {
+            let data
             try {
-              var data = JSON.parse(line)
+              data = JSON.parse(line)
             } catch (error) {
               return null
             }
@@ -270,7 +271,7 @@ function shutdown () {
 
 server.listen(process.env.PORT || 8080)
 
-var CONCURRENCY_LIMIT = 3
+const CONCURRENCY_LIMIT = 3
 
 schedule.scheduleJob('0 * * * *', deleteOldVotes)
 
@@ -281,8 +282,8 @@ function deleteOldVotes () {
     if (error) return logger.error(error, 'deleteOldVotes readdir')
     runParallelLimit(entries.map(function (id) {
       return function (done) {
-        var directory = path.join(DIRECTORY, id)
-        var votePath = joinVotePath(id)
+        const directory = path.join(DIRECTORY, id)
+        const votePath = joinVotePath(id)
         jsonfile.readFile(votePath, function (error, vote) {
           if (error) return logger.error(error, 'deleteOldVotes readFile')
           if (!old(vote.date)) return
@@ -296,7 +297,7 @@ function deleteOldVotes () {
   })
 }
 
-var THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
+const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000
 
 function old (created) {
   return (new Date() - new Date(created)) > THIRTY_DAYS
@@ -319,13 +320,13 @@ function mail (message, callback) {
     !process.env.MAILGUN_DOMAIN ||
     !process.env.MAILGUN_KEY
   ) return callback()
-  var form = new FormData()
+  const form = new FormData()
   form.append('from', process.env.MAILGUN_FROM)
   form.append('to', process.env.EMAIL_TO)
   form.append('subject', message.subject)
   form.append('o:dkim', 'yes')
   form.append('text', message.text.join('\n\n'))
-  var options = {
+  const options = {
     method: 'POST',
     host: 'api.mailgun.net',
     path: '/v3/' + process.env.MAILGUN_DOMAIN + '/messages',
@@ -336,7 +337,7 @@ function mail (message, callback) {
     https.request(options)
       .once('error', callback)
       .once('response', function (response) {
-        var status = response.statusCode
+        const status = response.statusCode
         if (status === 200) return callback()
         simpleConcat(response, function (error, body) {
           if (error) return callback(error)
@@ -353,7 +354,7 @@ function renderMustache (templateFile, view, callback) {
     footer: loadPartial('footer')
   }, function (error, templates) {
     if (error) return callback(error)
-    var html = mustache.render(templates.rendered, view, templates)
+    const html = mustache.render(templates.rendered, view, templates)
     callback(null, html)
   })
 
