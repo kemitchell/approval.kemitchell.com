@@ -22,5 +22,6 @@
   },
   "scripts": {
     "lint": "standard"
-  }
+  },
+  "name": "approval.kemitchell.com"
 }
