@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
   const submitButton = document.getElementById('submit')
   if (!submitButton) return
   const template = document.getElementById('choice')
@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const addButton = document.createElement('button')
   addP.appendChild(addButton)
   addButton.type = 'button'
-  addButton.addEventListener('click', function (event) {
+  addButton.addEventListener('click', event => {
     event.preventDefault()
     event.stopPropagation()
     const clone = document.importNode(template.content, true)

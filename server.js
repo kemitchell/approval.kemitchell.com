@@ -32,7 +32,7 @@ process
   .on('SIGTERM', shutdown)
   .on('SIGQUIT', shutdown)
   .on('SIGINT', shutdown)
-  .on('uncaughtException', function (error) {
+  .on('uncaughtException', error => {
     logger.error(error, 'uncaughtException')
     shutdown()
   })
@@ -43,7 +43,7 @@ const ID_RE = new RegExp('^/([a-f0-9]{' + (ID_BYTES * 2) + '})$')
 
 const addLoggers = pinoHTTP({ logger })
 
-const server = http.createServer(function (request, response) {
+const server = http.createServer((request, response) => {
   addLoggers(request, response)
   const url = request.url
   if (url === '/') return index(request, response)
@@ -69,7 +69,7 @@ function index (request, response) {
 }
 
 function getIndex (request, response) {
-  renderMustache('index.html', {}, function (error, html) {
+  renderMustache('index.html', {}, (error, html) => {
     if (error) return internalError(request, response, error)
     response.setHeader('Content-Type', 'text/html')
     response.end(html)
@@ -81,14 +81,14 @@ function postIndex (request, response) {
   const choices = []
   request.pipe(
     new Busboy({ headers: request.headers })
-      .on('field', function (name, value) {
+      .on('field', (name, value) => {
         if (!value) return
         if (name === 'title') title = value
         if (name === 'choices[]') choices.push(value)
       })
-      .once('finish', function () {
+      .once('finish', () => {
         request.log.info({ title, choices }, 'inputs')
-        createID(function (error, id) {
+        createID((error, id) => {
           if (error) return internalError(request, response, error)
           request.log.info({ id }, 'id')
           if (!title || choices.length === 0) {
@@ -99,13 +99,13 @@ function postIndex (request, response) {
           const data = { date, title, choices }
           const votePath = joinVotePath(id)
           runSeries([
-            function (done) {
+            done => {
               fs.mkdir(dataPath(id), { recursive: true }, done)
             },
-            function (done) {
+            done => {
               fs.writeFile(votePath, JSON.stringify(data), 'utf8', done)
             }
-          ], function (error) {
+          ], error => {
             if (error) return internalError(request, response, error)
             response.setHeader('Location', '/' + id)
             response.statusCode = 303
@@ -117,7 +117,7 @@ function postIndex (request, response) {
 }
 
 function createID (callback) {
-  crypto.randomBytes(ID_BYTES, function (error, buffer) {
+  crypto.randomBytes(ID_BYTES, (error, buffer) => {
     if (error) return callback(error)
     callback(null, buffer.toString('hex'))
   })
@@ -143,18 +143,18 @@ function vote (request, response, id) {
 
 function getVote (request, response, id) {
   doNotCache(response)
-  readVoteData(id, function (error, data) {
+  readVoteData(id, (error, data) => {
     if (error) {
       if (error.code === 'ENOENT') return notFound(request, response)
       else return internalError(request, response, error)
     }
-    data.markdownChoices = data.choices.map(function (choice) {
+    data.markdownChoices = data.choices.map(choice => {
       const reader = new commonmark.Parser()
       const writer = new commonmark.HtmlRenderer()
       const parsed = reader.parse(choice)
       return writer.render(parsed)
     })
-    renderMustache('vote.html', data, function (error, html) {
+    renderMustache('vote.html', data, (error, html) => {
       if (error) return internalError(request, response, error)
       response.setHeader('Content-Type', 'text/html')
       response.end(html)
@@ -167,23 +167,23 @@ function postVote (request, response, id) {
   let responder
   const choices = []
   request.pipe(new Busboy({ headers: request.headers })
-    .on('field', function (name, value) {
+    .on('field', (name, value) => {
       if (!value) return
       if (name === 'responder') responder = value
       if (name === 'choices[]') choices.push(value)
     })
-    .once('finish', function () {
+    .once('finish', () => {
       request.log.info({ responder, choices }, 'data')
       const date = dateString()
       const line = JSON.stringify([date, responder, choices])
       const responsesPath = joinResponsesPath(id)
-      fs.appendFile(responsesPath, line + '\n', function (error) {
+      fs.appendFile(responsesPath, line + '\n', error => {
         if (error) return internalError(request, response, error)
-        renderMustache('voted.html', {}, function (error, html) {
+        renderMustache('voted.html', {}, (error, html) => {
           if (error) return internalError(request, response, error)
           response.end(html)
         })
-        readVoteData(id, function (error, data) {
+        readVoteData(id, (error, data) => {
           if (error) return logger.error(error, 'readVoteData')
           const title = data.title
           mail({
@@ -193,7 +193,7 @@ function postVote (request, response, id) {
               '"' + title + '".',
               HOSTNAME + '/' + id
             ]
-          }, function (error) {
+          }, error => {
             if (error) logger.error(error, 'mail')
           })
         })
@@ -203,19 +203,17 @@ function postVote (request, response, id) {
 
 function readVoteData (id, callback) {
   runParallel({
-    vote: function (done) {
-      jsonfile.readFile(joinVotePath(id), done)
-    },
-    responses: function (done) {
+    vote: done => { jsonfile.readFile(joinVotePath(id), done) },
+    responses: done => {
       const responsesPath = joinResponsesPath(id)
-      fs.readFile(responsesPath, 'utf8', function (error, ndjson) {
+      fs.readFile(responsesPath, 'utf8', (error, ndjson) => {
         if (error) {
           if (error.code === 'ENOENT') ndjson = ''
           else return callback(error)
         }
         done(null, ndjson
           .split('\n')
-          .map(function (line) {
+          .map(line => {
             let data
             try {
               data = JSON.parse(line)
@@ -228,13 +226,11 @@ function readVoteData (id, callback) {
               choices: data[2]
             }
           })
-          .filter(function (x) {
-            return x !== null
-          })
+          .filter(x => x !== null)
         )
       })
     }
-  }, function (error, results) {
+  }, (error, results) => {
     if (error) return callback(error)
     callback(null, {
       title: results.vote.title,
@@ -264,9 +260,7 @@ function internalError (request, response, error) {
 }
 
 function shutdown () {
-  server.close(function () {
-    process.exit()
-  })
+  server.close(() => { process.exit() })
 }
 
 server.listen(process.env.PORT || 8080)
@@ -278,16 +272,16 @@ schedule.scheduleJob('0 * * * *', deleteOldVotes)
 deleteOldVotes()
 
 function deleteOldVotes () {
-  fs.readdir(DIRECTORY, function (error, entries) {
+  fs.readdir(DIRECTORY, (error, entries) => {
     if (error) return logger.error(error, 'deleteOldVotes readdir')
-    runParallelLimit(entries.map(function (id) {
-      return function (done) {
+    runParallelLimit(entries.map(id => {
+      return done => {
         const directory = path.join(DIRECTORY, id)
         const votePath = joinVotePath(id)
-        jsonfile.readFile(votePath, function (error, vote) {
+        jsonfile.readFile(votePath, (error, vote) => {
           if (error) return logger.error(error, 'deleteOldVotes readFile')
           if (!old(vote.date)) return
-          rimraf(directory, function (error) {
+          rimraf(directory, error => {
             logger.info({ id }, 'deleteOldVotes deleted')
             if (error) logger.error(error, 'deleteOldVotes rimraf')
           })
@@ -310,7 +304,7 @@ function dateString () {
 function mail (message, callback) {
   assert(typeof message.subject === 'string')
   assert(Array.isArray(message.text))
-  assert(message.text.every(function (element) {
+  assert(message.text.every(element => {
     return typeof element === 'string'
   }))
   assert(typeof callback === 'function')
@@ -336,10 +330,10 @@ function mail (message, callback) {
   form.pipe(
     https.request(options)
       .once('error', callback)
-      .once('response', function (response) {
+      .once('response', response => {
         const status = response.statusCode
         if (status === 200) return callback()
-        simpleConcat(response, function (error, body) {
+        simpleConcat(response, (error, body) => {
           if (error) return callback(error)
           callback(body.toString())
         })
@@ -352,7 +346,7 @@ function renderMustache (templateFile, view, callback) {
     rendered: loadFile(templateFile),
     head: loadPartial('head'),
     footer: loadPartial('footer')
-  }, function (error, templates) {
+  }, (error, templates) => {
     if (error) return callback(error)
     const html = mustache.render(templates.rendered, view, templates)
     callback(null, html)
@@ -363,7 +357,7 @@ function renderMustache (templateFile, view, callback) {
   }
 
   function loadFile (name) {
-    return function (done) {
+    return done => {
       fs.readFile(packagePath(name), 'utf8', done)
     }
   }
