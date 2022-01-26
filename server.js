@@ -80,13 +80,13 @@ function postIndex (request, response) {
   let title
   const choices = []
   request.pipe(
-    new Busboy({ headers: request.headers })
+    Busboy({ headers: request.headers })
       .on('field', (name, value) => {
         if (!value) return
         if (name === 'title') title = value
         if (name === 'choices[]') choices.push(value)
       })
-      .once('finish', () => {
+      .once('close', () => {
         request.log.info({ title, choices }, 'inputs')
         createID((error, id) => {
           if (error) return internalError(request, response, error)
@@ -166,13 +166,13 @@ function postVote (request, response, id) {
   doNotCache(response)
   let responder
   const choices = []
-  request.pipe(new Busboy({ headers: request.headers })
+  request.pipe(Busboy({ headers: request.headers })
     .on('field', (name, value) => {
       if (!value) return
       if (name === 'responder') responder = value
       if (name === 'choices[]') choices.push(value)
     })
-    .once('finish', () => {
+    .once('close', () => {
       request.log.info({ responder, choices }, 'data')
       const date = dateString()
       const line = JSON.stringify([date, responder, choices])
