@@ -1,1 +1,2 @@
-ssh approval.kemitchell.com "source ~/.profile ; ./update-approval"
+#!/bin/sh
+ssh approval.kemitchell.com "source \$HOME/.profile && ./update/approval"
