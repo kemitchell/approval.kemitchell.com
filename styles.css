@@ -1,7 +1,6 @@
 body > header,
 body > main,
 body > footer {
-  line-height: 1.5625;
   padding: 1rem;
 }
 
