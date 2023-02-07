@@ -5,6 +5,7 @@ const basicAuth = require('basic-auth')
 const commonmark = require('commonmark')
 const crypto = require('crypto')
 const doNotCache = require('do-not-cache')
+const escapeHTML = require('escape-html')
 const fs = require('fs')
 const http = require('http')
 const https = require('https')
@@ -188,11 +189,12 @@ function postVote (request, response, id) {
           const title = data.title
           mail({
             subject: 'Response to "' + title + '"',
-            text: [
-              '"' + responder + '" responded to ' +
-              '"' + title + '".',
-              HOSTNAME + '/' + id
-            ]
+            html: `
+            <p>
+              ${escapeHTML(responder)}
+              responded to
+              <a href="${HOSTNAME}/${id}">${escapeHTML(title)}</a>.
+            `.trim()
           }, error => {
             if (error) logger.error(error, 'mail')
           })
@@ -303,10 +305,7 @@ function dateString () {
 
 function mail (message, callback) {
   assert(typeof message.subject === 'string')
-  assert(Array.isArray(message.text))
-  assert(message.text.every(element => {
-    return typeof element === 'string'
-  }))
+  assert(typeof message.html === 'string')
   assert(typeof callback === 'function')
   if (
     !process.env.MAILGUN_FROM ||
@@ -319,7 +318,7 @@ function mail (message, callback) {
   form.append('to', process.env.EMAIL_TO)
   form.append('subject', message.subject)
   form.append('o:dkim', 'yes')
-  form.append('text', message.text.join('\n\n'))
+  form.append('html', message.html)
   const options = {
     method: 'POST',
     host: 'api.mailgun.net',
