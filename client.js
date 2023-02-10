@@ -1,3 +1,5 @@
+let inputType = 'text'
+
 document.addEventListener('DOMContentLoaded', () => {
   const submitButton = document.getElementById('submit')
   if (!submitButton) return
@@ -14,4 +16,22 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   addButton.appendChild(document.createTextNode('Add Option'))
   submitButton.parentNode.insertBefore(addP, submitButton)
+  const toggleButton = document.createElement('button')
+  toggleButton.appendChild(document.createTextNode('Change Mode'))
+  toggleMode.addEventListener('click', toggleMode)
 })
+
+const name = 'choices[]'
+
+function toggleMode () {
+  const newInputType = inputType === 'text' ? 'date' : 'text'
+  for (const existing of document.querySelectorAll(`input[name="${name}"]`)) {
+    const replacement = document.createElement('input')
+    replacement.setAttribute('name', name)
+    replacement.setAttribute('type', newInputType)
+    const parent = existing.parentNode
+    parent.insertBefore(replacement, existing)
+    parent.removeChild(existing)
+  }
+  inputType = newInputType
+}
