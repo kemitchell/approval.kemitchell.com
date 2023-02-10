@@ -1,5 +1,5 @@
-let inputType = 'text'
 const choiceInputName = 'choices[]'
+const inputType = 'input[name=inputType]'
 
 document.addEventListener('DOMContentLoaded', () => {
   const submitButton = document.getElementById('submit')
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     event.stopPropagation()
     const newInput = document.createElement('input')
     newInput.setAttribute('name', choiceInputName)
-    newInput.setAttribute('type', inputType)
+    newInput.setAttribute('type', document.querySelector(inputType).value)
     addButton.parentNode.insertBefore(newInput, addButton)
   })
   addButton.appendChild(document.createTextNode('Add Option'))
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleButton.addEventListener('click', event => {
     event.preventDefault()
     event.stopPropagation()
-    const newInputType = inputType === 'text' ? 'datetime-local' : 'text'
+    const newInputType = document.querySelector(inputType).value === 'text' ? 'datetime-local' : 'text'
     for (const existing of document.querySelectorAll(`input[name="${choiceInputName}"]`)) {
       const replacement = document.createElement('input')
       replacement.setAttribute('name', choiceInputName)
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
       parent.insertBefore(replacement, existing)
       parent.removeChild(existing)
     }
-    inputType = newInputType
+    document.querySelector(inputType).setAttribute('value', newInputType)
   })
   submitButton.parentNode.insertBefore(toggleButton, submitButton)
 })

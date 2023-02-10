@@ -78,13 +78,14 @@ function getIndex (request, response) {
 }
 
 function postIndex (request, response) {
-  let title
+  let title, inputType
   const choices = []
   request.pipe(
     Busboy({ headers: request.headers })
       .on('field', (name, value) => {
         if (!value) return
         if (name === 'title') title = value
+        if (name === 'inputType') title = value
         if (name === 'choices[]') choices.push(value)
       })
       .once('close', () => {
@@ -97,7 +98,7 @@ function postIndex (request, response) {
             return response.end()
           }
           const date = dateString()
-          const data = { date, title, choices }
+          const data = { date, title, inputType, choices }
           const votePath = joinVotePath(id)
           runSeries([
             done => {
@@ -150,10 +151,14 @@ function getVote (request, response, id) {
       else return internalError(request, response, error)
     }
     data.markdownChoices = data.choices.map(choice => {
-      const reader = new commonmark.Parser()
-      const writer = new commonmark.HtmlRenderer()
-      const parsed = reader.parse(choice)
-      return writer.render(parsed)
+      if (data.inputType === 'datetime-local') {
+        return new Date(choice).toLocaleString('en-US')
+      } else {
+        const reader = new commonmark.Parser()
+        const writer = new commonmark.HtmlRenderer()
+        const parsed = reader.parse(choice)
+        return writer.render(parsed)
+      }
     })
     renderMustache('vote.html', data, (error, html) => {
       if (error) return internalError(request, response, error)
