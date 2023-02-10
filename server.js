@@ -150,12 +150,9 @@ function getVote (request, response, id) {
       if (error.code === 'ENOENT') return notFound(request, response)
       else return internalError(request, response, error)
     }
-    data.markdownChoices = data.choices.map(choice => {
+    data.htmlChoices = data.choices.map(choice => {
       if (data.inputType === 'datetime-local') {
-        return new Date(choice).toLocaleString('en-US', {
-          dateStyle: 'full',
-          timeStyle: 'full'
-        })
+        return `<time datetime="${choice}">${choice}</time>`
       } else {
         const reader = new commonmark.Parser()
         const writer = new commonmark.HtmlRenderer()
