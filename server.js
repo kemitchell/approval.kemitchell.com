@@ -152,7 +152,12 @@ function getVote (request, response, id) {
     }
     data.markdownChoices = data.choices.map(choice => {
       if (data.inputType === 'datetime-local') {
-        return new Date(choice).toLocaleString('en-US')
+        return new Date(choice).toLocaleString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
       } else {
         const reader = new commonmark.Parser()
         const writer = new commonmark.HtmlRenderer()
