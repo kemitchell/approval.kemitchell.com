@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleButton.addEventListener('click', event => {
     event.preventDefault()
     event.stopPropagation()
-    const newInputType = inputType === 'text' ? 'date' : 'text'
+    const newInputType = inputType === 'text' ? 'datetime-local' : 'text'
     for (const existing of document.querySelectorAll(`input[name="${choiceInputName}"]`)) {
       const replacement = document.createElement('input')
       replacement.setAttribute('name', choiceInputName)
