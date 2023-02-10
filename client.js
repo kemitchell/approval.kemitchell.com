@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   submitButton.parentNode.insertBefore(addP, submitButton)
   const toggleButton = document.createElement('button')
   toggleButton.appendChild(document.createTextNode('Change Mode'))
-  toggleMode.addEventListener('click', toggleMode)
+  toggleButton.addEventListener('click', toggleMode)
+  submitButton.parentNode.insertBefore(toggleButton, submitButton)
 })
 
 const name = 'choices[]'
