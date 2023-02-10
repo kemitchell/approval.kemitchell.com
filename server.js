@@ -153,10 +153,8 @@ function getVote (request, response, id) {
     data.markdownChoices = data.choices.map(choice => {
       if (data.inputType === 'datetime-local') {
         return new Date(choice).toLocaleString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+          dateStyle: 'long',
+          timeStyle: 'long'
         })
       } else {
         const reader = new commonmark.Parser()
