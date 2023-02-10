@@ -85,7 +85,7 @@ function postIndex (request, response) {
       .on('field', (name, value) => {
         if (!value) return
         if (name === 'title') title = value
-        if (name === 'inputType') title = value
+        if (name === 'inputType') inputType = value
         if (name === 'choices[]') choices.push(value)
       })
       .once('close', () => {
