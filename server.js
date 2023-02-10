@@ -246,6 +246,7 @@ function readVoteData (id, callback) {
     if (error) return callback(error)
     callback(null, {
       title: results.vote.title,
+      inputType: results.vote.inputType,
       choices: results.vote.choices,
       responses: results.responses
     })
