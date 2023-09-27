@@ -21,11 +21,14 @@ import runParallelLimit from 'run-parallel-limit'
 import runSeries from 'run-series'
 import schedule from 'node-schedule'
 import simpleConcat from 'simple-concat'
+import { fileURLToPath } from 'url'
 
 const DIRECTORY = process.env.DIRECTORY || 'approval-data'
 const HOSTNAME = process.env.HOSTNAME || os.hostname()
 const PASSWORD = process.env.PASSWORD || 'approval'
 const USERNAME = process.env.USERNAME || 'approval'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const logger = pino()
 
