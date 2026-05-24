@@ -15,7 +15,6 @@ import os from 'os'
 import path from 'path'
 import pino from 'pino'
 import pinoHTTP from 'pino-http'
-import { rimraf } from 'rimraf'
 import runParallel from 'run-parallel'
 import runParallelLimit from 'run-parallel-limit'
 import runSeries from 'run-series'
@@ -295,9 +294,9 @@ function deleteOldVotes () {
         jsonfile.readFile(votePath, (error, vote) => {
           if (error) return logger.error(error, 'deleteOldVotes readFile')
           if (!old(vote.date)) return
-          rimraf(directory, error => {
+          fs.rm(directory, { recursive: true }, error => {
             logger.info({ id }, 'deleteOldVotes deleted')
-            if (error) logger.error(error, 'deleteOldVotes rimraf')
+            if (error) logger.error(error, 'deleteOldVotes rm')
           })
         })
       }
