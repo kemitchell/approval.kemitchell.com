@@ -1,7 +1,7 @@
 import Busboy from 'busboy'
 import FormData from 'form-data'
 import assert from 'assert'
-import basicAuth from 'basic-auth'
+import { parse as basicAuth } from 'basic-auth'
 import * as commonmark from 'commonmark'
 import crypto from 'crypto'
 import doNotCache from 'do-not-cache'
