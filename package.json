@@ -6,7 +6,7 @@
     "standard": "^17.1.2"
   },
   "dependencies": {
-    "basic-auth": "^2.0.1",
+    "basic-auth": "^3.0.0",
     "busboy": "^1.6.0",
     "commonmark": "^0.31.2",
     "do-not-cache": "^1.0.1",
